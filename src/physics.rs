@@ -160,27 +160,44 @@ mod tests {
         assert!(error.y < 0.001 );
     }
 
-    // def test_movement_to1(self):
-    //     p1 = Point(0, 0)
-    //     p2 = Point(-5, 0)
-    //     self.assertAlmostEqual(p1.movement_to(p2).x, -1.000)
-    //     self.assertAlmostEqual(p1.movement_to(p2).y, 0.000)
+    #[test]
+    fn movement_to2() {
+        let x = Point { x: 0.0, y: 0.0 };
+        let y = Point { x: 5.0, y: 0.0 };
+        let movement = x.movement_to(&y);
+        let error = movement.sub(&Point { x: 1.0, y: 0.0 });
+        assert!(error.x < 0.001 );
+        assert!(error.y < 0.001 );
+    }
+    #[test]
+    fn movement_to3() {
+        let x = Point { x: 0.0, y: 0.0 };
+        let y = Point { x: 0.0, y: 3.0 };
+        let movement = x.movement_to(&y);
+        let error = movement.sub(&Point { x: 0.0, y: 1.0 });
+        assert!(error.x < 0.001 );
+        assert!(error.y < 0.001 );
+    }
 
-    // def test_movement_to2(self):
-    //     p1 = Point(0, 0)
-    //     p2 = Point(5, 0)
-    //     self.assertAlmostEqual(p1.movement_to(p2).x, 1.000)
-    //     self.assertAlmostEqual(p1.movement_to(p2).y, 0.000)
 
-    // def test_movement_to3(self):
-    //     p1 = Point(1, 1)
-    //     p2 = Point(1, 5)
-    //     self.assertAlmostEqual(p1.movement_to(p2).x, 0.000)
-    //     self.assertAlmostEqual(p1.movement_to(p2).y, 1.000)
+    #[test]
+    fn movement_to4() {
+        let x = Point { x: 0.0, y: 0.0 };
+        let y = Point { x: 0.0, y: -10.0 };
+        let movement = x.movement_to(&y);
+        let error = movement.sub(&Point { x: 0.0, y: -1.0 });
+        assert!(error.x < 0.001 );
+        assert!(error.y < 0.001 );
+    }
 
-    // def test_movement_to4(self):
-    //     p1 = Point(10, 10)
-    //     p2 = Point(10, 5)
-    //     self.assertAlmostEqual(p1.movement_to(p2).x, 0.000)
-    //     self.assertAlmostEqual(p1.movement_to(p2).y, -1.000)
+    #[test]
+    fn movement_to5() {
+        let x = Point { x: 0.0, y: 0.0 };
+        let y = Point { x: 10.0, y: 10.0 };
+        let movement = x.movement_to(&y);
+        // let error = movement.sub(&Point { x: 0.5, y: 0.5 });
+        assert!(movement.abs() > 0.999999 );
+        assert_eq!(movement.x, movement.y );
+    }
+
 }
