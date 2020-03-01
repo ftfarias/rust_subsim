@@ -37,16 +37,34 @@ impl std::fmt::Display for Point {
 }
 
 impl Point {
-    fn squared(&self) -> f32 {
+    pub fn squared(&self) -> f32 {
         (self.x.powi(2)) + (self.y.powi(2))
     }
 
     /// Returns the absolute value (lengh) of the vector
-    fn abs(&self) -> f32 {
+    pub fn abs(&self) -> f32 {
         self.squared().sqrt()
     }
 
-    fn sub(&self, other: &Point) -> Point {
+    /// Returns the unit (normalized) Point
+    pub fn unit(&self) -> Point {
+        let length = self.abs();
+        Point {
+            x: self.x / length,
+            y: self.y / length,
+        }
+    }
+
+    /// Adds points
+    pub fn add(&self, other: &Point) -> Point {
+        Point {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+
+    /// Subtract points
+    pub fn sub(&self, other: &Point) -> Point {
         Point {
             x: self.x - other.x,
             y: self.y - other.y,
@@ -54,29 +72,65 @@ impl Point {
     }
 
     /// Returns the distance between two points
-    fn distance_to(&self, other: &Point) -> f32 {
+    pub fn distance_to(&self, other: &Point) -> f32 {
         let diff = self.sub(other);
         diff.abs()
     }
 
     /// Returns the "game angles" in radians between two point
-    fn angle_to(&self, other: &Point) -> f32 {
+    pub fn angle_to(&self, other: &Point) -> f32 {
         let diff = other.sub(&self);
         diff.y.atan2(diff.x)
     }
 
-    fn movement_to(&self, other: &Point) -> Point {
+    /// Returns the Point that "moves" in the diretion on destination with unitary length
+    pub fn movement_to(&self, other: &Point) -> Point {
         let angle = self.angle_to(&other);
         Point {
             x: angle.cos(),
             y: angle.sin(),
         }
     }
+
+    pub fn rotated(&self, radians: f32) -> Point {
+        let cos = radians.cos();
+        let sin = radians.sin();
+        let x = (self.x * cos) - (self.y * sin);
+        let y = (self.x * sin) + (self.y * cos);
+        Point { x, y }
+    }
+
+    pub fn angle(&self) -> f32 {
+        self.y.atan2(self.x)
+    }
+
+    /// Return the angle in User Angle
+    pub fn user_angle(&self) -> f32 {
+        if self.x == 0.0 && self.y == 0.0 {
+            return 0.0
+        }
+        let mut angle = 90.0 - self.angle().to_degrees();
+        while angle >= 360.0 {
+            angle = angle - 360.0
+        }
+        while angle < 0.0 {
+            angle = angle + 360.0
+        }
+        angle
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn similar_points(a: Point, b: Point) -> bool {
+        let e1 = (a.x - b.x).abs();
+        let e2 = (a.y - b.y).abs();
+        println!("{}", e1);
+        println!("{}", e2);
+        (e1 < 0.000001) && (e2 < 0.000001)
+    }
 
     #[test]
     fn squared1() {
@@ -109,10 +163,31 @@ mod tests {
     }
 
     #[test]
+    fn add1() {
+        let x = Point { x: 8.0, y: 6.0 };
+        let y = Point { x: 2.0, y: 3.0 };
+        assert_eq!(x.add(&y), Point { x: 10.0, y: 9.0 });
+    }
+
+    #[test]
+    fn add2() {
+        let x = Point { x: 2.0, y: 6.0 };
+        let y = Point { x: 5.0, y: 30.0 };
+        assert_eq!(x.add(&y), Point { x: 7.0, y: 36.0 });
+    }
+
+    #[test]
     fn sub1() {
         let x = Point { x: 8.0, y: 6.0 };
         let y = Point { x: 2.0, y: 3.0 };
         assert_eq!(x.sub(&y), Point { x: 6.0, y: 3.0 });
+    }
+
+    #[test]
+    fn sub2() {
+        let x = Point { x: 2.0, y: 6.0 };
+        let y = Point { x: 5.0, y: 30.0 };
+        assert_eq!(x.sub(&y), Point { x: -3.0, y: -24.0 });
     }
 
     #[test]
@@ -156,8 +231,8 @@ mod tests {
         let y = Point { x: -5.0, y: 0.0 };
         let movement = x.movement_to(&y);
         let error = movement.sub(&Point { x: -1.0, y: 0.0 });
-        assert!(error.x < 0.001 );
-        assert!(error.y < 0.001 );
+        assert!(error.x < 0.001);
+        assert!(error.y < 0.001);
     }
 
     #[test]
@@ -166,8 +241,8 @@ mod tests {
         let y = Point { x: 5.0, y: 0.0 };
         let movement = x.movement_to(&y);
         let error = movement.sub(&Point { x: 1.0, y: 0.0 });
-        assert!(error.x < 0.001 );
-        assert!(error.y < 0.001 );
+        assert!(error.x < 0.001);
+        assert!(error.y < 0.001);
     }
     #[test]
     fn movement_to3() {
@@ -175,10 +250,9 @@ mod tests {
         let y = Point { x: 0.0, y: 3.0 };
         let movement = x.movement_to(&y);
         let error = movement.sub(&Point { x: 0.0, y: 1.0 });
-        assert!(error.x < 0.001 );
-        assert!(error.y < 0.001 );
+        assert!(error.x < 0.001);
+        assert!(error.y < 0.001);
     }
-
 
     #[test]
     fn movement_to4() {
@@ -186,8 +260,8 @@ mod tests {
         let y = Point { x: 0.0, y: -10.0 };
         let movement = x.movement_to(&y);
         let error = movement.sub(&Point { x: 0.0, y: -1.0 });
-        assert!(error.x < 0.001 );
-        assert!(error.y < 0.001 );
+        assert!(error.x < 0.001);
+        assert!(error.y < 0.001);
     }
 
     #[test]
@@ -195,9 +269,89 @@ mod tests {
         let x = Point { x: 0.0, y: 0.0 };
         let y = Point { x: 10.0, y: 10.0 };
         let movement = x.movement_to(&y);
-        // let error = movement.sub(&Point { x: 0.5, y: 0.5 });
-        assert!(movement.abs() > 0.999999 );
-        assert_eq!(movement.x, movement.y );
+        assert!(movement.abs() > 0.999999);
+        assert_eq!(movement.x, movement.y);
     }
 
+    #[test]
+    fn unit1() {
+        let x = Point { x: 10.0, y: 0.0 };
+        assert_eq!(x.unit(), Point { x: 1.0, y: 0.0 });
+    }
+    #[test]
+    fn unit2() {
+        let x = Point { x: 0.0, y: -23.0 };
+        assert_eq!(x.unit(), Point { x: 0.0, y: -1.0 });
+    }
+    #[test]
+    fn unit3() {
+        let x = Point { x: -13.0, y: -13.0 };
+        assert_eq!(
+            x.unit(),
+            Point {
+                x: -0.70710677,
+                y: -0.70710677
+            }
+        );
+    }
+
+    #[test]
+    fn rotated1() {
+        let x = Point { x: -10.0, y: 1.0 };
+        assert!(similar_points(x.rotated(0.0), Point { x: -10.0, y: 1.0 }));
+    }
+
+    #[test]
+    fn rotated2() {
+        let x = Point { x: -10.0, y: 1.0 };
+        assert!(similar_points(
+            x.rotated(std::f32::consts::FRAC_PI_2),
+            Point { x: -1.0, y: -10.0 }
+        ));
+    }
+
+    #[test]
+    fn rotated3() {
+        let x = Point { x: -10.0, y: 1.0 };
+        assert!(similar_points(
+            x.rotated(std::f32::consts::PI),
+            Point { x: 10.0, y: -1.0 }
+        ));
+    }
+
+    #[test]
+    fn user_angle0() {
+        let x = Point { x: 0.0, y: 0.0 };
+        assert_eq!(x.user_angle(), 0.0);
+    }
+
+    #[test]
+    fn user_angle1() {
+        let x = Point { x: 0.0, y: 0.0 };
+        assert_eq!(x.user_angle(), 0.0);
+    }
+
+    #[test]
+    fn user_angle2() {
+        let x = Point { x: 1.0, y: 0.0 };
+        assert_eq!(x.user_angle(), 90.0);
+    }
+
+    #[test]
+    fn user_angle3() {
+        let x = Point { x: -1.0, y: 0.0 };
+        assert_eq!(x.user_angle(), 270.0);
+    }
+
+    #[test]
+    fn user_angle4() {
+        let x = Point { x: 0.0, y: 1.0 };
+        assert_eq!(x.user_angle(), 0.0);
+    }
+
+    #[test]
+    fn user_angle5() {
+        let x = Point { x: 0.0, y: -1.0 };
+        assert_eq!(x.user_angle(), 180.0);
+    }
 }
